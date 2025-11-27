@@ -52,15 +52,16 @@ public class NotificationController {
                                ", Time: " + notification.getTimestamp());
         }
 
-        // If you want to use MVC views:
-        if (view instanceof RiderView) {
-            ((RiderView) view).displayRiderProfile(null); // example placeholder
-        } else if (view instanceof DriverView) {
-            ((DriverView) view).displayDriverProfile(null);
-        } else if (view instanceof AdminView) {
-            ((AdminView) view).displayAdminProfile(null);
-        }
+        if (view instanceof RiderView && receiver instanceof models.Rider) {
+    ((RiderView) view).displayRiderProfile((models.Rider) receiver);
     }
+    else if (view instanceof DriverView && receiver instanceof models.Driver) {
+        ((DriverView) view).displayDriverProfile((models.Driver) receiver);
+    }
+    else if (view instanceof AdminView && receiver instanceof models.Admin) {
+        ((AdminView) view).displayAdminProfile((models.Admin) receiver);
+    }
+}
 
     // --- Get all notifications ---
     public List<Notification> getAllNotifications() {

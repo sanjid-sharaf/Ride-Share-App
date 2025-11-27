@@ -3,7 +3,7 @@ package models;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Rider {
+public class Rider extends User {
 
     private List<String> preferredPickup;
     private Wallet wallet;            // Wallet for payments

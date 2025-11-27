@@ -1,13 +1,20 @@
 package models;
 
 import java.util.List;
+import java.util.ArrayList;
 
-public class Driver {
+public class Driver extends User {
 
     private String licenseNumber;
     private String vehicleDetails;
     private Wallet wallet;
     private List<Ride> rideHistory;
+
+    // Constructor to initialize rideHistory
+    public Driver() {
+        this.rideHistory = new ArrayList<>();
+        this.wallet = new Wallet(); // optional, if you want a ready-to-use wallet
+    }
 
     public String getLicenseNumber() { return licenseNumber; }
     public void setLicenseNumber(String licenseNumber) { this.licenseNumber = licenseNumber; }
@@ -19,7 +26,6 @@ public class Driver {
 
     public List<Ride> getRideHistory() { return rideHistory; }
 
-    // Entity responsibilities only:
     public void addRideToHistory(Ride ride) {
         rideHistory.add(ride);
     }

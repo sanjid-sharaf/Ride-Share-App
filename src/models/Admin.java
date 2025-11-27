@@ -1,6 +1,6 @@
 package models;
 
-public class Admin {
+public class Admin extends User{
 
     private int adminLevel;
     private String adminRole;
