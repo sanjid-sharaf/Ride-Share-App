@@ -6,18 +6,52 @@ public class Booking {
 
     private int id;
     private Date date;
+    private int seatCount;
     private String status;
     private String paymentStatus;
+    private Payment payment;   // composition: each booking has a payment
 
-    public int getId(){ return id; }
-    public void setId(int id){ this.id = id; }
+    // --- Getters & Setters ---
 
-    public Date getDate(){ return date; }
-    public void setDate(Date date){ this.date = date; }
+    public int getId() { 
+        return id; 
+    }
+    public void setId(int id) { 
+        this.id = id; 
+    }
 
-    public String getStatus(){ return status; }
-    public void setStatus(String status){ this.status = status; }
+    public Date getDate() { 
+        return date; 
+    }
+    public void setDate(Date date) { 
+        this.date = date; 
+    }
 
-    public String getPaymentStatus(){ return paymentStatus; }
-    public void setPaymentStatus(String paymentStatus){ this.paymentStatus = paymentStatus; }
+    public int getSeatCount() { 
+        return seatCount; 
+    }
+    public void setSeatCount(int seatCount) { 
+        this.seatCount = seatCount; 
+    }
+
+    public String getStatus() { 
+        return status; 
+    }
+    public void setStatus(String status) { 
+        this.status = status; 
+    }
+
+    public String getPaymentStatus() { 
+        return paymentStatus; 
+    }
+    public void setPaymentStatus(String paymentStatus) { 
+        this.paymentStatus = paymentStatus; 
+    }
+
+    public Payment getPayment() { 
+        return payment; 
+    }
+    public void setPayment(Payment payment) { 
+        this.payment = payment; 
+    }
 }
