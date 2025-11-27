@@ -16,7 +16,9 @@ public class RiderController {
 
     private Rider model;
     private RiderView view;
-
+    public RiderView getView() {
+    return this.view;
+    }
     public RiderController(Rider model, RiderView view) {
         this.model = model;
         this.view = view;
