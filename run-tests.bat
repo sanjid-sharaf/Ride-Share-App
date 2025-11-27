@@ -1,11 +1,14 @@
 @echo off
+echo === Compiling Tests ===
 
-echo Compiling test files...
+setlocal enabledelayedexpansion
+set "TEST_FILES="
 
-rem Compile ONLY tests (assumes src classes are already in bin)
 for /r tests %%f in (*.java) do (
-    javac -d bin "%%f"
+    set "TEST_FILES=!TEST_FILES! %%f"
 )
 
-echo Running tests...
+javac -d bin !TEST_FILES!
+
+echo === Running Tests ===
 java -cp bin tests.ModelsTest
