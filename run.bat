@@ -1,3 +1,3 @@
 @echo off
 echo === Running Ride-Share-App ===
-java -cp "bin;libs\sqlite-jdbc.jar" Main
+java -cp "bin;lib/sqlite-jdbc-3.51.0.0.jar" Main

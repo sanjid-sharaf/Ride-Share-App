@@ -23,6 +23,7 @@ public class Driver extends User {
     public void setVehicleDetails(String vehicleDetails) { this.vehicleDetails = vehicleDetails; }
 
     public Wallet getWallet() { return wallet; }
+    public void setWallet(Wallet wallet) { this.wallet = wallet; }
 
     public List<Ride> getRideHistory() { return rideHistory; }
 
