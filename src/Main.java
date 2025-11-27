@@ -1,5 +1,6 @@
 import controllers.MainController;
 import ui.ridegui;
+import models.Database;
 
 public class Main {
     public static void main(String[] args) {

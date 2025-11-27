@@ -30,6 +30,10 @@ public class MainController {
 
     public MainController() {
         initializeSubControllers();
+
+        // --- Load data from SQLite ---
+        System.out.println("Loading data from SQLite...");
+        Database.loadAll();
     }
 
     public void initializeSubControllers() {
@@ -56,84 +60,58 @@ public class MainController {
         rideController = new RideController(currentRide, rideView);
         notificationController = new NotificationController();
 
-        // --- Initialize Mock Data ---
-        initMockData();
-
         System.out.println("All sub-controllers initialized successfully.");
     }
 
-    // --- Initialize some mock users, rides, and payments ---
-    private void initMockData() {
-        // Users
-        User user1 = new User();
-        user1.setId(1);
-        user1.setName("Alice");
-        user1.setEmail("alice@example.com");
-        user1.setPassword("pass123");
-        user1.setPhoneNumber("1234567890");
-        user1.setAddress("123 Main St");
-        Database.users.put(user1.getId(), user1);
-
-        User user2 = new User();
-        user2.setId(2);
-        user2.setName("Bob");
-        user2.setEmail("bob@example.com");
-        user2.setPassword("pass456");
-        user2.setPhoneNumber("0987654321");
-        user2.setAddress("456 Park Ave");
-        Database.users.put(user2.getId(), user2);
-
-        // Rides
-        Ride ride1 = new Ride();
-        ride1.setId(101);
-        ride1.setPickupLocation("Downtown");
-        ride1.setDropoffLocation("Airport");
-        ride1.setDateTime(new Date());
-        ride1.setAvailableSeats(3);
-        ride1.setFareEstimate(25.0);
-        ride1.setStatus("Scheduled");
-        Database.rides.add(ride1);
-
-        Ride ride2 = new Ride();
-        ride2.setId(102);
-        ride2.setPickupLocation("Mall");
-        ride2.setDropoffLocation("Station");
-        ride2.setDateTime(new Date());
-        ride2.setAvailableSeats(2);
-        ride2.setFareEstimate(15.0);
-        ride2.setStatus("Scheduled");
-        Database.rides.add(ride2);
-
-        System.out.println("Mock data initialized.");
-    }
-
-    // --- Example method to simulate app flow ---
+    // --- Run a simple demo using database data ---
     public void runDemo() {
         System.out.println("\n--- Demo: Login and Create Booking ---");
 
-        // Login user
-        loginController.verifyLogin(1, "alice@example.com", "pass123");
+        // Login the first user in the database
+        if (!Database.users.isEmpty()) {
+            User user = Database.users.values().iterator().next();
+            loginController.verifyLogin(user.getId(), user.getEmail(), user.getPassword());
+            loginController.updateView();
 
-        // View user profile
-        loginController.updateView();
+            System.out.println("Logged in as: " + user.getName());
 
-        // Rider books a ride
-        if (!Database.rides.isEmpty()) {
-            Ride ride = Database.rides.get(0);
+            // If user is Rider, book first available ride
+            if (user instanceof Rider rider && !Database.rides.isEmpty()) {
+                Ride ride = Database.rides.get(0);
 
-            Payment payment = new Payment();
-            payment.setAmount(ride.getFareEstimate());
-            payment.setTransactionStatus("Pending");
+                Payment payment = new Payment();
+                payment.setAmount(ride.getFareEstimate());
+                payment.setTransactionStatus("Pending");
 
-            riderController.makePayment(payment);
-            riderController.createBooking(ride, 2, payment);
+                riderController.makePayment(payment);
+                riderController.createBooking(ride, 1, payment);
 
-            // View rider profile after booking
-            riderController.updateView();
+                System.out.println("Created booking for ride: " + ride.getPickupLocation() + " -> " + ride.getDropoffLocation());
+
+                riderController.updateView();
+
+                // Send a notification
+                notificationController.sendNotification(rider, "Your ride is confirmed!");
+                notificationController.updateView(rider, riderView);
+            }
+        } else {
+            System.out.println("No users found in database.");
         }
 
-        // Send notification
-        notificationController.sendNotification(Database.users.get(1), "Your ride is confirmed!");
-        notificationController.updateView(Database.users.get(1), riderView);
+        // Save changes back to SQLite
+        shutdown();
+    }
+
+    // --- Save all data back to SQLite ---
+    public void shutdown() {
+        System.out.println("\nSaving data back to SQLite...");
+        Database.saveAll();
+        System.out.println("Database saved successfully.");
+    }
+
+    // --- Main entry for testing ---
+    public static void main(String[] args) {
+        MainController app = new MainController();
+        app.runDemo();
     }
 }
