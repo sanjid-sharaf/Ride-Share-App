@@ -12,7 +12,10 @@ public class DriverController {
 
     private Driver model;
     private DriverView view;
-
+    
+    public DriverView getView() {
+    return this.view;
+    }
     public DriverController(Driver model, DriverView view) {
         this.model = model;
         this.view = view;
