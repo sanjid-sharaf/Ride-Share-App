@@ -1,7 +1,7 @@
 import javax.swing.SwingUtilities;
 
 import controllers.MainController;
-import ui.ridegui;
+import ui.RideGUI;
 import models.Database;
 
 public class Main {
@@ -9,11 +9,11 @@ public class Main {
         System.out.println("=== Ride-Share App Starting ===");
 
         // Create main controller (shared between console demo and GUI)
-        MainController mainController = new MainController();
+       
 
         SwingUtilities.invokeLater(() -> {
-            ridegui gui = new ridegui();
-            gui.initWithController(mainController);
+            RideGUI gui = new RideGUI();
+            gui.init();
         });
 
 
