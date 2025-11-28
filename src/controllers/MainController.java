@@ -70,7 +70,7 @@ public class MainController {
         // Login the first user in the database
         if (!Database.users.isEmpty()) {
             User user = Database.users.values().iterator().next();
-            loginController.verifyLogin(user.getId(), user.getEmail(), user.getPassword());
+            loginController.verifyLogin(user.getName(), user.getPassword());
             loginController.updateView();
 
             System.out.println("Logged in as: " + user.getName());

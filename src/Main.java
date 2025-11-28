@@ -1,3 +1,5 @@
+import javax.swing.SwingUtilities;
+
 import controllers.MainController;
 import ui.ridegui;
 import models.Database;
@@ -9,14 +11,11 @@ public class Main {
         // Create main controller (shared between console demo and GUI)
         MainController mainController = new MainController();
 
-        // Option 1: Run console demo
-        mainController.runDemo();
-
-        // Option 2: Launch GUI
-        javax.swing.SwingUtilities.invokeLater(() -> {
+        SwingUtilities.invokeLater(() -> {
             ridegui gui = new ridegui();
-            gui.initWithController(mainController); // pass existing MainController to GUI
+            gui.initWithController(mainController);
         });
+
 
         System.out.println("=== GUI Launched ===");
     }
