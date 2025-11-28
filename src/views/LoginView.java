@@ -2,7 +2,6 @@ package views;
 
 import models.User;
 import ui.RideGUI;
-import javax.swing.*;
 
 public class LoginView {
 

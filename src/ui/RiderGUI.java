@@ -45,16 +45,76 @@ public class RiderGUI {
         logoutBtn.addActionListener(e -> {
             frame.dispose(); // Close RiderGUI
             RideGUI rideGUI = new RideGUI(); // create a new instance of RideGUI
+            Database.saveAll();
             rideGUI.init(); });
+
+        
+        JButton notificationsBtn = new JButton("View Notifications");
+        notificationsBtn.setBounds(50, 250, 180, 30);
+        notificationsBtn.addActionListener(e -> viewNotifications());
 
 
         frame.add(profileBtn);
         frame.add(bookRideBtn);
         frame.add(rideHistoryBtn);
         frame.add(cancelBookingBtn);
+        frame.add(logoutBtn);
+        frame.add(notificationsBtn);
 
         frame.setVisible(true);
     }
+
+    // ---------------- View Notifications ----------------
+    private void viewNotifications() {
+        // Fetch notifications for this rider
+        List<Notification> riderNotifs = mainController.notificationController
+                .getUserNotifications(rider, true); // should return all notifications for this rider
+
+        if (riderNotifs.isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "No notifications.");
+            return;
+        }
+
+        JFrame notifFrame = new JFrame("Notifications for " + rider.getName());
+        notifFrame.setSize(500, 400);
+        notifFrame.setLayout(new BorderLayout());
+        notifFrame.setLocationRelativeTo(frame);
+
+        DefaultListModel<String> listModel = new DefaultListModel<>();
+        for (Notification n : riderNotifs) {
+            String status = n.getStatus();
+            String msg = "[" + status + "] " + n.getMessage() + " | " + n.getTimestamp();
+            listModel.addElement(msg);
+        }
+
+        JList<String> notifList = new JList<>(listModel);
+        notifList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        JScrollPane scrollPane = new JScrollPane(notifList);
+
+        JPanel buttonPanel = new JPanel();
+        JButton closeBtn = new JButton("Close");
+        JButton markReadBtn = new JButton("Mark All as Read");
+
+        buttonPanel.add(markReadBtn);
+        buttonPanel.add(closeBtn);
+
+        notifFrame.add(scrollPane, BorderLayout.CENTER);
+        notifFrame.add(buttonPanel, BorderLayout.SOUTH);
+
+        // ---------------- Actions ----------------
+        closeBtn.addActionListener(e -> notifFrame.dispose());
+
+        markReadBtn.addActionListener(e -> {
+            for (Notification n : riderNotifs) {
+                mainController.notificationController.markAsRead(n.getId());
+            }
+            Database.saveAll(); // persist changes
+            JOptionPane.showMessageDialog(notifFrame, "All notifications marked as read.");
+            notifFrame.dispose();
+        });
+
+        notifFrame.setVisible(true);
+        }
 
     // ---------------- Show Profile GUI ----------------
     private void showProfileGUI() {
@@ -118,6 +178,7 @@ public class RiderGUI {
         bookFrame.add(scrollPane);
         bookFrame.add(bookSelectedBtn);
 
+        
         bookFrame.setVisible(true);
 
         // ---------------- Search Action ----------------
@@ -162,8 +223,9 @@ public class RiderGUI {
                 JOptionPane.showMessageDialog(bookFrame, "Ride booked successfully!");
                 bookFrame.dispose();
             }
+            Database.saveAll();
         });
-        Database.saveAll();
+        
     }
 
     // ---------------- Ride History ----------------

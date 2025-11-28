@@ -36,6 +36,8 @@ public class DriverController {
 
     // Create a new ride
     public void createRide(Ride ride) {
+        int newId = Database.getNextRideId();
+        ride.setId(newId);
         Database.rides.add(ride);      // Add to centralized Database
         model.addRideToHistory(ride);  // Add to driver's personal ride history
         System.out.println("Ride created successfully: " + ride.getId());

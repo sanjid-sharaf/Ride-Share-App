@@ -5,6 +5,7 @@ import models.*;
 import controllers.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 public class DriverGUI {
@@ -43,11 +44,11 @@ public class DriverGUI {
         JButton notificationsBtn = new JButton("View Notifications");
         notificationsBtn.setBounds(50, 250, 180, 30);
         notificationsBtn.addActionListener(e ->
-                mainController.notificationController.updateView(driver, mainController.driverController.getView())
+                viewNotifications()
         );
 
         JButton logoutBtn = new JButton("Logout");
-logoutBtn.setBounds(50, 300, 150, 30);
+        logoutBtn.setBounds(50, 300, 150, 30);
 logoutBtn.addActionListener(e -> {
     Database.saveAll();
     frame.dispose(); // Close DriverGUI
@@ -63,6 +64,57 @@ logoutBtn.addActionListener(e -> {
         frame.add(logoutBtn);
 
         frame.setVisible(true);
+    }
+// ---------------- View Notifications ----------------
+    private void viewNotifications() {
+        // Fetch notifications for this driver
+        java.util.List<Notification> driverNotifs = mainController.notificationController.getUserNotifications(driver, true); // should return all unread + read
+
+        if (driverNotifs.isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "No notifications.");
+            return;
+        }
+
+        // Create popup
+        JFrame notifFrame = new JFrame("Notifications for " + driver.getName());
+        notifFrame.setSize(500, 400);
+        notifFrame.setLayout(new BorderLayout());
+        notifFrame.setLocationRelativeTo(frame);
+
+        DefaultListModel<String> listModel = new DefaultListModel<>();
+        for (Notification n : driverNotifs) {
+            String status = n.getStatus();
+            String msg = "[" + status + "] " + n.getMessage() + " | " + n.getTimestamp();
+            listModel.addElement(msg);
+        }
+
+        JList<String> notifList = new JList<>(listModel);
+        notifList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        JScrollPane scrollPane = new JScrollPane(notifList);
+
+        JPanel buttonPanel = new JPanel();
+        JButton closeBtn = new JButton("Close");
+        JButton markReadBtn = new JButton("Mark All as Read");
+
+        buttonPanel.add(markReadBtn);
+        buttonPanel.add(closeBtn);
+
+        notifFrame.add(scrollPane, BorderLayout.CENTER);
+        notifFrame.add(buttonPanel, BorderLayout.SOUTH);
+
+        // ---------------- Actions ----------------
+        closeBtn.addActionListener(e -> notifFrame.dispose());
+
+        markReadBtn.addActionListener(e -> {
+            for (Notification n : driverNotifs) {
+                mainController.notificationController.markAsRead(n.getId());
+            }
+            Database.saveAll(); // persist changes
+            JOptionPane.showMessageDialog(notifFrame, "All notifications marked as read.");
+            notifFrame.dispose();
+        });
+
+        notifFrame.setVisible(true);
     }
 
     // ---------------- Show Profile GUI ----------------
@@ -85,17 +137,24 @@ logoutBtn.addActionListener(e -> {
         profileFrame.setVisible(true);
     }
 
-    // ---------------- Add Ride ----------------
     private void addRideDialog() {
         JFrame addRideFrame = new JFrame("Add Ride");
-        addRideFrame.setSize(400, 300);
+        addRideFrame.setSize(400, 400);
         addRideFrame.setLayout(new GridLayout(0, 2, 5, 5));
         addRideFrame.setLocationRelativeTo(frame);
 
+        // Input fields
         JTextField pickupField = new JTextField();
         JTextField dropoffField = new JTextField();
         JTextField seatsField = new JTextField();
         JTextField fareField = new JTextField();
+
+        // Separate date & time fields
+        JTextField dayField = new JTextField();
+        JTextField monthField = new JTextField();
+        JTextField yearField = new JTextField();
+        JTextField hourField = new JTextField();
+        JTextField minuteField = new JTextField();
 
         addRideFrame.add(new JLabel("Pickup Location:"));
         addRideFrame.add(pickupField);
@@ -106,6 +165,17 @@ logoutBtn.addActionListener(e -> {
         addRideFrame.add(new JLabel("Fare:"));
         addRideFrame.add(fareField);
 
+        addRideFrame.add(new JLabel("Day:"));
+        addRideFrame.add(dayField);
+        addRideFrame.add(new JLabel("Month:"));
+        addRideFrame.add(monthField);
+        addRideFrame.add(new JLabel("Year:"));
+        addRideFrame.add(yearField);
+        addRideFrame.add(new JLabel("Hour (0-23):"));
+        addRideFrame.add(hourField);
+        addRideFrame.add(new JLabel("Minute (0-59):"));
+        addRideFrame.add(minuteField);
+
         JButton addBtn = new JButton("Add Ride");
         JButton backBtn = new JButton("Back");
 
@@ -114,30 +184,57 @@ logoutBtn.addActionListener(e -> {
             String dropoff = dropoffField.getText().trim();
             int seats;
             double fare;
+            int day, month, year, hour, minute;
+            java.util.Date rideDate;
 
+            // Validate non-empty pickup/dropoff
             if (pickup.isEmpty() || dropoff.isEmpty()) {
                 JOptionPane.showMessageDialog(addRideFrame, "Pickup and Dropoff cannot be empty.");
                 return;
             }
 
+            // Validate seats and fare
             try {
                 seats = Integer.parseInt(seatsField.getText().trim());
                 fare = Double.parseDouble(fareField.getText().trim());
+                if (seats <= 0 || fare < 0) throw new NumberFormatException();
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(addRideFrame, "Invalid input for seats or fare.");
                 return;
             }
 
+            // Validate date/time fields
+            try {
+                day = Integer.parseInt(dayField.getText().trim());
+                month = Integer.parseInt(monthField.getText().trim());
+                year = Integer.parseInt(yearField.getText().trim());
+                hour = Integer.parseInt(hourField.getText().trim());
+                minute = Integer.parseInt(minuteField.getText().trim());
+
+                Calendar cal = Calendar.getInstance();
+                cal.setLenient(false);
+                cal.set(year, month - 1, day, hour, minute, 0); // month is 0-based
+                rideDate = cal.getTime(); // Throws exception if invalid
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(addRideFrame, "Invalid date or time values.");
+                return;
+            }
+
+            // Create ride
             Ride ride = new Ride();
             ride.setPickupLocation(pickup);
             ride.setDropoffLocation(dropoff);
             ride.setAvailableSeats(seats);
             ride.setFareEstimate(fare);
             ride.setDriver(driver);
+            ride.setDateTime(rideDate);
 
+            // Add ride via controller
             mainController.driverController.createRide(ride);
+
             JOptionPane.showMessageDialog(addRideFrame, "Ride added successfully!");
             addRideFrame.dispose();
+            Database.saveAll();
         });
 
         backBtn.addActionListener(e -> addRideFrame.dispose());
@@ -146,7 +243,6 @@ logoutBtn.addActionListener(e -> {
         addRideFrame.add(backBtn);
 
         addRideFrame.setVisible(true);
-        Database.saveAll();
     }
 
     // ---------------- Ride History ----------------

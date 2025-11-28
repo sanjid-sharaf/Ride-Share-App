@@ -51,4 +51,15 @@ public class Ride {
         bookings.add(booking);
         availableSeats -= booking.getSeatCount(); // Update available seats
     }
+
+    @Override
+    public String toString() {
+        return "Ride ID: " + id +
+            " | From: " + pickupLocation +
+            " | To: " + dropoffLocation +
+            " | Driver: " + driver.getName() +
+            " | Seats Available " + availableSeats +
+            " | Date " + dateTime +
+            " | Fare: $" + fareEstimate;
+    }
 }
