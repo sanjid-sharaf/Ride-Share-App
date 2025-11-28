@@ -10,12 +10,59 @@ public class LoginController {
     private LoginView view;
     private boolean loggedIn = false;
 
+    // Reference to your main GUI window
+    private Object mainGUI;
+
     public LoginController(User model, LoginView view) {
         this.model = model;
         this.view = view;
     }
 
-    // --- Getters and Setters for User attributes ---
+    // If your GUI class is ridegui, pass it here
+    public void setMainGUI(Object gui) {
+        this.mainGUI = gui;
+    }
+
+    // -------------------------
+    // 🔥 ADD THIS — GUI HANDLERS
+    // -------------------------
+    public void attachHandlers(LoginView view) {
+        view.loginButton.addActionListener(e -> {
+
+            String email = view.emailField.getText();
+            String pass = new String(view.passwordField.getPassword());
+
+            boolean success = verifyLoginByEmail(email, pass);
+
+            view.displayLoginResult(success);
+
+            if (success && mainGUI != null) {
+                try {
+                    // Calls a method like ridegui.showDashboard();
+                    mainGUI.getClass()
+                           .getMethod("showDashboard")
+                           .invoke(mainGUI);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+    }
+
+    // New helper: login by email + password
+    private boolean verifyLoginByEmail(String email, String password) {
+        for (User u : Database.users.values()) {
+            if (u.getEmail().equalsIgnoreCase(email) && u.getPassword().equals(password)) {
+                this.model = u;
+                loggedIn = true;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // ---------- Your existing code below ----------
+
     public void setUserId(int id) { model.setId(id); }
     public int getUserId() { return model.getId(); }
 
@@ -37,12 +84,9 @@ public class LoginController {
     public void setLoginSystemUser(User user) { this.model = user; }
     public User getLoginSystemUser() { return this.model; }
 
-    // --- User actions ---
-
-    // Register a new user
     public void register() {
         if (model != null && !Database.users.containsKey(model.getId())) {
-            Database.users.put(model.getId(), model);  // <-- Use centralized Database
+            Database.users.put(model.getId(), model);
             loggedIn = true;
             view.displayLoginResult(true);
         } else {
@@ -50,9 +94,8 @@ public class LoginController {
         }
     }
 
-    // Verify login credentials
     public boolean verifyLogin(int userId, String email, String password) {
-        User user = Database.users.get(userId);  // <-- Use centralized Database
+        User user = Database.users.get(userId);
         if (user != null && user.getEmail().equals(email) && user.getPassword().equals(password)) {
             this.model = user;
             loggedIn = true;
@@ -64,13 +107,11 @@ public class LoginController {
         }
     }
 
-    // Logout the user
     public void logout() {
         loggedIn = false;
         System.out.println("User logged out successfully.");
     }
 
-    // Edit profile
     public void editProfile(String name, String phoneNumber, String address) {
         if (!loggedIn) {
             System.out.println("Please login first.");
@@ -82,7 +123,6 @@ public class LoginController {
         System.out.println("Profile updated successfully.");
     }
 
-    // View profile
     public User viewProfile() {
         if (!loggedIn) {
             System.out.println("Please login first.");
@@ -92,7 +132,6 @@ public class LoginController {
         return model;
     }
 
-    // Update view
     public void updateView() {
         view.printUserDetails(model);
     }
