@@ -1,15 +1,15 @@
 package views;
 
 import models.User;
-import ui.ridegui;
+import ui.RideGUI;
 import javax.swing.*;
 
 public class LoginView {
 
-    private ridegui gui;  // reference to the main GUI
+    private RideGUI gui;  // reference to the main GUI
 
     // GUI setter
-    public void setGUI(ridegui gui) {
+    public void setGUI(RideGUI gui) {
         this.gui = gui;
     }
 
