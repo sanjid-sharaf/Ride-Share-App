@@ -1,9 +1,7 @@
 package controllers;
 
 import models.*;
-import views.*;
-
-import java.util.Date;
+import ui.*;
 
 public class MainController {
 
@@ -15,103 +13,78 @@ public class MainController {
     public RideController rideController;
     public NotificationController notificationController;
 
-    // Models and Views
+    // Current logged-in user
     private User currentUser;
-    private Rider currentRider;
-    private Driver currentDriver;
-    private Admin currentAdmin;
-    private Ride currentRide;
 
-    private LoginView loginView;
-    private RiderView riderView;
-    private DriverView driverView;
-    private AdminView adminView;
-    private RideView rideView;
+    // GUIs
+    private LoginGUI loginGUI;
+    private RiderGUI riderGUI;
+    private DriverGUI driverGUI;
+    private AdminGUI adminGUI;
 
     public MainController() {
-        initializeSubControllers();
-
-        // --- Load data from SQLite ---
+        // Load database first
         System.out.println("Loading data from SQLite...");
         Database.loadAll();
-    }
 
-    public void initializeSubControllers() {
-
-        // --- Initialize Views ---
-        loginView = new LoginView();
-        riderView = new RiderView();
-        driverView = new DriverView();
-        adminView = new AdminView();
-        rideView = new RideView();
-
-        // --- Initialize Models ---
-        currentUser = new User();
-        currentRider = new Rider();
-        currentDriver = new Driver();
-        currentAdmin = new Admin();
-        currentRide = new Ride();
-
-        // --- Initialize Controllers ---
-        loginController = new LoginController(currentUser, loginView);
-        riderController = new RiderController(currentRider, riderView);
-        driverController = new DriverController(currentDriver, driverView);
-        adminController = new AdminController(currentAdmin, adminView);
-        rideController = new RideController(currentRide, rideView);
+        // Initialize notification controller
         notificationController = new NotificationController();
 
-        System.out.println("All sub-controllers initialized successfully.");
+        // Initialize LoginController (no GUI yet)
+        loginController = new LoginController(this);
+
+        // Show login GUI
+        loginGUI = new LoginGUI(this);
+        loginGUI.showFrame();
+
+        System.out.println("Login GUI displayed.");
     }
 
-    // --- Run a simple demo using database data ---
-    public void runDemo() {
-        System.out.println("\n--- Demo: Login and Create Booking ---");
+    // Called by LoginController after successful login
+    public void loginSuccess(User user) {
+        this.currentUser = user;
 
-        // Login the first user in the database
-        if (!Database.users.isEmpty()) {
-            User user = Database.users.values().iterator().next();
-            loginController.verifyLogin(user.getName(), user.getPassword());
-            loginController.updateView();
+        System.out.println("Logged in as: " + user.getName() + " (" + user.getClass().getSimpleName() + ")");
 
-            System.out.println("Logged in as: " + user.getName());
+        // Launch appropriate GUI based on user type
+        if (user instanceof Rider rider) {
+            riderGUI = new RiderGUI(rider, this);
+            riderController = new RiderController(rider, riderGUI);
+            riderGUI.showFrame();
 
-            // If user is Rider, book first available ride
-            if (user instanceof Rider rider && !Database.rides.isEmpty()) {
-                Ride ride = Database.rides.get(0);
+        } else if (user instanceof Driver driver) {
+            driverGUI = new DriverGUI(driver, this);
+            driverController = new DriverController(driver, driverGUI);
+            driverGUI.showFrame();
 
-                Payment payment = new Payment();
-                payment.setAmount(ride.getFareEstimate());
-                payment.setTransactionStatus("Pending");
-
-                riderController.makePayment(payment);
-                riderController.createBooking(ride, 1, payment);
-
-                System.out.println("Created booking for ride: " + ride.getPickupLocation() + " -> " + ride.getDropoffLocation());
-
-                riderController.updateView();
-
-                // Send a notification
-                notificationController.sendNotification(rider, "Your ride is confirmed!");
-                notificationController.updateView(rider, riderView);
-            }
-        } else {
-            System.out.println("No users found in database.");
+        } else if (user instanceof Admin admin) {
+            adminGUI = new AdminGUI(admin, this);
+            adminController = new AdminController(admin, adminGUI);
+            adminGUI.showFrame();
         }
 
-        // Save changes back to SQLite
-        shutdown();
+        // Close login window
+        if (loginGUI != null) loginGUI.close();
     }
 
-    // --- Save all data back to SQLite ---
+    // Called by LoginController to display login messages
+    public void showLoginMessage(String msg) {
+        if (loginGUI != null) loginGUI.displayText(msg);
+    }
+
+    // Optional: shutdown method
     public void shutdown() {
         System.out.println("\nSaving data back to SQLite...");
         Database.saveAll();
         System.out.println("Database saved successfully.");
     }
 
-    // --- Main entry for testing ---
+    public void showLoginGUI() {
+        if (loginGUI == null) loginGUI = new LoginGUI(this);
+        loginGUI.showFrame();
+    }
+
     public static void main(String[] args) {
-        MainController app = new MainController();
-        app.runDemo();
+        new MainController();
     }
 }

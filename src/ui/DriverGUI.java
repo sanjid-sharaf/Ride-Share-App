@@ -8,7 +8,9 @@ public class DriverGUI {
 
     private Driver driver;
     private MainController mainController;
+
     private JFrame frame;
+    private JTextArea outputArea;
 
     public DriverGUI(Driver driver, MainController mainController) {
         this.driver = driver;
@@ -18,57 +20,103 @@ public class DriverGUI {
     public void showFrame() {
         frame = new JFrame("Driver Dashboard - " + driver.getName());
         frame.setSize(500, 400);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(null);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        // ----- Buttons -----
-        JButton profileBtn = new JButton("View Profile");
-        profileBtn.setBounds(50, 50, 150, 30);
-        profileBtn.addActionListener(e -> mainController.driverController.updateView());
+        // ---------------- Buttons ----------------
+        JButton createRideBtn = new JButton("Create Ride");
+        createRideBtn.setBounds(50, 50, 150, 30);
+        createRideBtn.addActionListener(e -> createRideDemo());
 
-        JButton addRideBtn = new JButton("Add Ride");
-        addRideBtn.setBounds(50, 100, 150, 30);
-        addRideBtn.addActionListener(e -> addRideDialog());
+        JButton viewProfileBtn = new JButton("View Profile");
+        viewProfileBtn.setBounds(220, 50, 150, 30);
+        viewProfileBtn.addActionListener(e -> updateDriverProfile());
 
-        JButton notificationsBtn = new JButton("View Notifications");
-        notificationsBtn.setBounds(50, 150, 180, 30);
-        notificationsBtn.addActionListener(e -> 
-            mainController.notificationController.updateView(driver, mainController.driverController.getView())
-        );
+        JButton notificationsBtn = new JButton("Notifications");
+        notificationsBtn.setBounds(50, 90, 150, 30);
+        notificationsBtn.addActionListener(e -> showNotifications());
 
-        frame.add(profileBtn);
-        frame.add(addRideBtn);
+        // ---------------- Output Area ----------------
+        outputArea = new JTextArea();
+        outputArea.setEditable(false);
+        JScrollPane scroll = new JScrollPane(outputArea);
+        scroll.setBounds(50, 130, 380, 200);
+
+        // ---------------- Add Components ----------------
+        frame.add(createRideBtn);
+        frame.add(viewProfileBtn);
         frame.add(notificationsBtn);
+        frame.add(scroll);
 
+        frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
 
-    // ----- Dialog to add ride -----
-    private void addRideDialog() {
-        String pickup = JOptionPane.showInputDialog(frame, "Enter pickup location:");
-        if (pickup == null || pickup.isEmpty()) return;
+    // ---------------- Methods ----------------
 
-        String dropoff = JOptionPane.showInputDialog(frame, "Enter dropoff location:");
-        if (dropoff == null || dropoff.isEmpty()) return;
-
-        int seats;
-        double fare;
-        try {
-            seats = Integer.parseInt(JOptionPane.showInputDialog(frame, "Enter number of seats:"));
-            fare = Double.parseDouble(JOptionPane.showInputDialog(frame, "Enter fare:"));
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(frame, "Invalid input for seats or fare.");
+    private void createRideDemo() {
+        if (mainController.driverController == null) {
+            displayMessage("DriverController not initialized.");
             return;
         }
 
         Ride ride = new Ride();
-        ride.setPickupLocation(pickup);
-        ride.setDropoffLocation(dropoff);
-        ride.setAvailableSeats(seats);
-        ride.setFareEstimate(fare);
+        ride.setId(Database.rides.size() + 1);
         ride.setDriver(driver);
+        ride.setPickupLocation("A");
+        ride.setDropoffLocation("B");
+        ride.setAvailableSeats(4);
+        ride.setFareEstimate(20);
 
-        mainController.driverController.createRide(ride); // Save in controller
-        JOptionPane.showMessageDialog(frame, "Ride added successfully!");
+        mainController.driverController.createRide(ride);
+        displayMessage("Ride created: ID " + ride.getId() + ", " + ride.getPickupLocation() + " -> " + ride.getDropoffLocation());
+    }
+
+    private void updateDriverProfile() {
+        if (mainController.driverController == null) {
+            displayMessage("DriverController not initialized.");
+            return;
+        }
+
+        mainController.driverController.updateView();
+    }
+
+    public void displayMessage(String msg) {
+        if (outputArea != null) {
+            outputArea.append(msg + "\n");
+        }
+    }
+
+    public void displayDriverInfo(Driver driver) {
+        displayMessage("Driver: " + driver.getName() + ", Vehicle: " + driver.getVehicleDetails());
+        displayMessage("License: " + driver.getLicenseNumber());
+        displayMessage("Wallet Balance: $" + driver.getWallet().getBalance());
+        displayMessage("Ride History Count: " + driver.getRideHistory().size());
+    }
+
+    private void showNotifications() {
+        if (mainController.notificationController == null) {
+            displayMessage("NotificationController not initialized.");
+            return;
+        }
+
+        var notifications = Database.notifications.stream()
+            .filter(n -> n.getStatus().equals("Unread"))
+            .toList();
+
+        if (notifications.isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "No new notifications.");
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (Notification n : notifications) {
+            sb.append("ID: ").append(n.getId())
+              .append(" - ").append(n.getMessage())
+              .append("\n");
+            n.setStatus("Read");
+        }
+
+        JOptionPane.showMessageDialog(frame, sb.toString(), "Notifications", JOptionPane.INFORMATION_MESSAGE);
     }
 }
