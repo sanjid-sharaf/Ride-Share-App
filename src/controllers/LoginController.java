@@ -1,6 +1,9 @@
 package controllers;
 
 import models.User;
+import models.Driver;
+import models.Rider;
+import models.Admin;
 import models.Database;
 import views.LoginView;
 
@@ -15,8 +18,7 @@ public class LoginController {
         this.view = view;
     }
 
-    // ---------- User actions ----------
-
+    // Existing methods
     public void register() {
         if (model != null && !Database.users.containsKey(model.getId())) {
             Database.users.put(model.getId(), model);
@@ -40,25 +42,44 @@ public class LoginController {
         return false;
     }
 
+    // ✅ New method for GUI usage
+    public User verifyLoginByName(String name, String password, String type) {
+        for (User u : Database.users.values()) {
+            boolean typeMatch = (type.equals("Rider") && u instanceof Rider)
+                             || (type.equals("Driver") && u instanceof Driver)
+                             || (type.equals("Admin") && u instanceof Admin);
+
+            if (u.getName().equalsIgnoreCase(name) && u.getPassword().equals(password) && typeMatch) {
+                this.model = u;
+                loggedIn = true;
+                if (view != null) view.displayLoginResult(true);
+                return u;
+            }
+        }
+        if (view != null) view.displayLoginResult(false);
+        return null;
+    }
+
+    // Existing methods
     public void logout() {
         loggedIn = false;
-        view.displayMessage("User logged out successfully.");
+        if (view != null) view.displayMessage("User logged out successfully.");
     }
 
     public void editProfile(String name, String phoneNumber, String address) {
         if (!loggedIn) {
-            view.displayMessage("Please login first.");
+            if (view != null) view.displayMessage("Please login first.");
             return;
         }
         model.setName(name);
         model.setPhoneNumber(phoneNumber);
         model.setAddress(address);
-        view.displayMessage("Profile updated successfully.");
+        if (view != null) view.displayMessage("Profile updated successfully.");
     }
 
     public User viewProfile() {
         if (!loggedIn) {
-            view.displayMessage("Please login first.");
+            if (view != null) view.displayMessage("Please login first.");
             return null;
         }
         updateView();
@@ -66,11 +87,10 @@ public class LoginController {
     }
 
     public void updateView() {
-        view.printUserDetails(model);
+        if (view != null) view.printUserDetails(model);
     }
 
     // Access the current user
     public void setLoginSystemUser(User user) { this.model = user; }
     public User getLoginSystemUser() { return this.model; }
-
 }
