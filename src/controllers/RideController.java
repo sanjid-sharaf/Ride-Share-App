@@ -1,6 +1,7 @@
 package controllers;
 
 import models.Ride;
+import models.Rider;
 import models.Booking;
 import models.Database;
 import views.RideView;
@@ -11,6 +12,7 @@ public class RideController {
 
     private Ride model;
     private RideView view;
+    private Rider rider;
 
     public RideController(Ride model, RideView view) {
         this.model = model;

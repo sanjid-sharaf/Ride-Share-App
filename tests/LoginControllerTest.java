@@ -47,7 +47,7 @@ public class LoginControllerTest {
 
 
        // --- Test 3: Verify login with correct credentials ---
-       boolean loginSuccess = controller.verifyLogin(1, "john@example.com", "pass123");
+       boolean loginSuccess = controller.verifyLogin( "john@example.com", "pass123");
        if (loginSuccess) {
            System.out.println("Test login with correct credentials: PASSED");
        } else {
@@ -56,7 +56,7 @@ public class LoginControllerTest {
 
 
        // --- Test 4: Verify login with wrong credentials ---
-       boolean loginFail = controller.verifyLogin(1, "john@example.com", "wrongpass");
+       boolean loginFail = controller.verifyLogin( "john@example.com", "wrongpass");
        if (!loginFail) {
            System.out.println("Test login with wrong credentials: PASSED");
        } else {
