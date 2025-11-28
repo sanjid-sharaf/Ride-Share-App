@@ -2,6 +2,8 @@ package models;
 
 import java.sql.*;
 import java.util.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 
 public class Database {
 
@@ -259,22 +261,43 @@ public class Database {
     }
 
     // ------------------ NOTIFICATIONS ------------------
-    private static void loadNotifications(Connection conn) throws SQLException {
-        notifications.clear();
-        String sql = "SELECT * FROM notifications";
-        try (Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            while (rs.next()) {
-                Notification n = new Notification();
-                n.setId(rs.getInt("id"));
-                n.setMessage(rs.getString("message"));
-                String ts = rs.getString("timestamp");
-                if (ts != null) n.setTimestamp(Timestamp.valueOf(ts));
-                n.setStatus(rs.getString("status"));
-                notifications.add(n);
+private static void loadNotifications(Connection conn) throws SQLException {
+    notifications.clear();
+    String sql = "SELECT * FROM notifications";
+    try (Statement stmt = conn.createStatement();
+         ResultSet rs = stmt.executeQuery(sql)) {
+        while (rs.next()) {
+            Notification n = new Notification();
+            n.setId(rs.getInt("id"));
+            n.setMessage(rs.getString("message"));
+            n.setStatus(rs.getString("status"));
+
+            String ts = rs.getString("timestamp");
+            if (ts != null) {
+                try {
+                    // Try standard Timestamp format first
+                    n.setTimestamp(java.sql.Timestamp.valueOf(ts));
+                } catch (IllegalArgumentException e1) {
+                    // If fails, try parsing as yyyy-MM-dd HH:mm:ss
+                    try {
+                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                        java.util.Date date = sdf.parse(ts);
+                        n.setTimestamp(new java.sql.Timestamp(date.getTime()));
+                    } catch (java.text.ParseException e2) {
+                        // fallback to current time
+                        System.out.println("Failed to parse timestamp: " + ts + ", using current time.");
+                        n.setTimestamp(new java.util.Date());
+                    }
+                }
+            } else {
+                // If null, use current time
+                n.setTimestamp(new java.util.Date());
             }
+
+            notifications.add(n);
         }
     }
+}
 
     private static void saveNotifications(Connection conn) throws SQLException {
         try (Statement stmt = conn.createStatement()) {
